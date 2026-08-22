@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-primary: #F6F4EE;
+    --bg-secondary: #FFFFFF;
+    --text-primary: #1A1A1A;
+    --text-muted: #6B6B6B;
+    --accent-bronze: #AD9277;
+    --accent-bronze-dark: #8C755E;
+    --accent-bronze-light: #F3EDE6;
+    --accent-dark-brown: #3D2B1F;
+    --accent-deep-espresso: #2A1D15;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: 'Montserrat', 'Plus Jakarta Sans', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, .font-serif-luxury {
+    font-family: 'Playfair Display', 'Cinzel', Georgia, serif;
+  }
+
+  .font-cinzel {
+    font-family: 'Cinzel', serif;
+  }
+
+  .font-sans-ui {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F6F4EE;
+}
+::-webkit-scrollbar-thumb {
+  background: #AD9277;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8C755E;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px rgba(173, 146, 115, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(173, 146, 115, 0.6); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-right {
+  animation: slideRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Custom Soft Utilities */
+.bg-warm-cream { background-color: #F6F4EE; }
+.bg-warm-cream-dark { background-color: #ECE8DE; }
+.bg-bronze { background-color: #AD9277; }
+.bg-bronze-dark { background-color: #8C755E; }
+.bg-espresso { background-color: #2A1D15; }
+.bg-chocolate { background-color: #3D2B1F; }
+
+.text-bronze { color: #AD9277; }
+.text-bronze-dark { color: #8C755E; }
+.text-espresso { color: #2A1D15; }
+.text-chocolate { color: #3D2B1F; }
+.text-muted-gray { color: #6B6B6B; }
+
+.border-bronze { border-color: #AD9277; }
+.border-bronze-light { border-color: #E3D9CE; }
+.border-cream-dark { border-color: #E6E0D4; }
+
+.glass-header {
+  background: rgba(246, 244, 238, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(173, 146, 115, 0.2);
+  border-radius: 1rem;
+}
