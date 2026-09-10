@@ -30,9 +30,6 @@
               Eksplor Koleksi <ArrowRight class="w-4 h-4" />
             </BaseButton>
           </router-link>
-          <router-link to="/about">
-            <BaseButton variant="outline"> Filosofi Brand </BaseButton>
-          </router-link>
         </div>
       </div>
 

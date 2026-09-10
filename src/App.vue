@@ -11,9 +11,6 @@
     <!-- Footer -->
     <Footer />
 
-    <!-- Cart Drawer Modal -->
-    <CartDrawer />
-
     <!-- Quick View Product Modal -->
     <QuickViewModal />
 
@@ -25,7 +22,6 @@
 <script setup lang="ts">
 import Navbar from './components/layout/Navbar.vue';
 import Footer from './components/layout/Footer.vue';
-import CartDrawer from './components/layout/CartDrawer.vue';
 import QuickViewModal from './components/layout/QuickViewModal.vue';
 import ToastContainer from './components/common/ToastContainer.vue';
 </script>

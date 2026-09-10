@@ -96,6 +96,16 @@
               class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
             ></span>
           </router-link>
+          <router-link
+            to="/faq"
+            class="hover:text-[#AD9277] transition-colors py-1 relative group"
+            active-class="text-[#AD9277] font-semibold"
+          >
+            FAQ
+            <span
+              class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
+            ></span>
+          </router-link>
         </div>
 
         <!-- Right Action Icons -->
@@ -115,20 +125,17 @@
             </span>
           </router-link>
 
-          <!-- Cart Button -->
-          <button
-            @click="cartStore.toggleCart()"
-            class="relative p-2 hover:text-[#AD9277] hover:bg-stone-100 transition-colors rounded-full flex items-center gap-2 cursor-pointer"
-            title="Keranjang Belanja"
+          <!-- Shopee Store Link -->
+          <a
+            href="https://shopee.co.id/avarastudio"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#EE4D2D]/10 text-[#EE4D2D] hover:bg-[#EE4D2D] hover:text-white transition-all cursor-pointer shadow-2xs"
+            title="Toko Shopee Official Avara Studio"
           >
-            <ShoppingBag class="w-5 h-5" />
-            <span
-              v-if="cartStore.totalItemCount > 0"
-              class="bg-[#2A1D15] text-[#F6F4EE] text-[10px] px-2 py-0.5 font-bold tracking-wider rounded-full"
-            >
-              {{ cartStore.totalItemCount }}
-            </span>
-          </button>
+            <ShoppingBag class="w-3.5 h-3.5" />
+            <span>Shopee</span>
+          </a>
         </div>
       </div>
 
@@ -169,11 +176,26 @@
           class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A]"
           >Busana & Sepatu</router-link
         >
+        <a
+          href="https://shopee.co.id/avarastudio"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="py-2 border-b border-[#E6E0D4] text-[#EE4D2D] font-bold flex items-center gap-2"
+        >
+          <ShoppingBag class="w-4 h-4" />
+          <span>Toko Official Shopee</span>
+        </a>
         <router-link
           @click="mobileMenuOpen = false"
           to="/about"
+          class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A]"
+          >Tentang Avara</router-link
+        >
+        <router-link
+          @click="mobileMenuOpen = false"
+          to="/faq"
           class="py-2 text-[#1A1A1A]"
-          >Tentang Avara Studio</router-link
+          >FAQ</router-link
         >
       </div>
     </nav>
@@ -182,13 +204,11 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useCartStore } from "../../store/cartStore";
 import { useWishlistStore } from "../../store/wishlistStore";
 import { useProductStore } from "../../store/productStore";
 import { Menu, Search, Heart, ShoppingBag, Sparkles } from "lucide-vue-next";
 
 const mobileMenuOpen = ref(false);
-const cartStore = useCartStore();
 const wishlistStore = useWishlistStore();
 const productStore = useProductStore();
 </script>

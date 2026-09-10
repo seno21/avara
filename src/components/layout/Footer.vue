@@ -3,9 +3,9 @@
     class="bg-[#2A1D15] text-[#F6F4EE] pt-16 pb-12 border-t border-[#3D2B1F]"
   >
     <div class="max-w-7xl mx-auto px-4 lg:px-12">
-      <!-- Top Grid -->
+      <!-- Top Grid (3 Columns) -->
       <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-14 border-b border-stone-800"
+        class="grid grid-cols-1 md:grid-cols-3 gap-10 pb-14 border-b border-stone-800"
       >
         <!-- Brand Info -->
         <div class="space-y-4">
@@ -39,46 +39,21 @@
           </div>
         </div>
 
-        <!-- Quick Links -->
+        <!-- Categories Link (Kategori - Maksimal 5) -->
         <div class="space-y-3 font-sans text-xs">
           <h3
             class="font-serif text-sm font-bold tracking-wider text-[#AD9277] uppercase"
           >
-            Koleksi Produk
+            Kategori
           </h3>
           <ul class="space-y-2 text-[#D1C7BD]">
-            <li>
+            <li v-for="cat in footerCategories" :key="cat.id">
               <router-link
-                to="/shop?category=leather"
+                :to="`/shop?category=${cat.id}`"
                 class="hover:text-white transition-colors"
-                >Leather Goods Premium</router-link
               >
-            </li>
-            <li>
-              <router-link
-                to="/shop?category=wear"
-                class="hover:text-white transition-colors"
-                >Busana & Sepatu Suede</router-link
-              >
-            </li>
-            <li>
-              <router-link
-                to="/shop?category=accessories"
-                class="hover:text-white transition-colors"
-                >Aksesoris & Jam Tangan</router-link
-              >
-            </li>
-            <li>
-              <router-link
-                to="/shop?category=fragrance"
-                class="hover:text-white transition-colors"
-                >Parfum & Wewangian Niche</router-link
-              >
-            </li>
-            <li>
-              <router-link to="/shop" class="hover:text-white transition-colors"
-                >Katalog Lengkap</router-link
-              >
+                {{ cat.name }}
+              </router-link>
             </li>
           </ul>
         </div>
@@ -107,60 +82,31 @@
             </li>
           </ul>
         </div>
-
-        <!-- Newsletter Subscription -->
-        <div class="space-y-4 font-sans">
-          <h3
-            class="font-serif text-sm font-bold tracking-wider text-[#AD9277] uppercase"
-          >
-            Langganan Privé
-          </h3>
-          <p class="text-xs text-[#D1C7BD] leading-relaxed">
-            Dapatkan akses awal ke koleksi terbatas dan penawaran istimewa dari
-            Avara Studio.
-          </p>
-        </div>
       </div>
 
       <!-- Bottom Bar -->
       <div
-        class="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-sans text-[#8C755E]"
+        class="pt-8 flex flex-col sm:flex-row items-center justify-between text-center gap-4 text-xs font-sans text-[#8C755E]"
       >
         <p>© 2026 AVARA STUDIO. Seluruh hak cipta dilindungi undang-undang.</p>
+        <router-link to="/admin" class="hover:text-white transition-colors underline flex items-center gap-1">
+          <span>Dashboard Admin Studio</span>
+        </router-link>
       </div>
     </div>
   </footer>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useToastStore } from "../../store/toastStore";
-import {
-  Instagram,
-  Facebook,
-  Twitter,
-  MapPin,
-  Phone,
-  Mail,
-} from "lucide-vue-next";
+import { computed } from "vue";
+import { useProductStore } from "../../store/productStore";
+import { Instagram, Facebook, Phone, Mail } from "lucide-vue-next";
 
-const emailInput = ref("");
-const toastStore = useToastStore();
+const productStore = useProductStore();
 
-function handleSubscribe() {
-  if (emailInput.value.includes("@")) {
-    toastStore.showToast(
-      "Langganan Berhasil!",
-      "Terima kasih telah bergabung. Gunakan kode AVARA10 untuk diskon 10%.",
-      "success",
-    );
-    emailInput.value = "";
-  } else {
-    toastStore.showToast(
-      "Email Tidak Valid",
-      "Silakan masukkan alamat email yang benar.",
-      "warning",
-    );
-  }
-}
+const footerCategories = computed(() => {
+  return productStore.categories
+    .filter((cat) => cat.id !== "all")
+    .slice(0, 5);
+});
 </script>

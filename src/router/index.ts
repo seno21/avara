@@ -1,8 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import HomeView from '../views/HomeView.vue';
 import ShopView from '../views/ShopView.vue';
-import CheckoutView from '../views/CheckoutView.vue';
+import FaqView from '../views/FaqView.vue';
 import AboutView from '../views/AboutView.vue';
+import AdminView from '../views/AdminView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -19,13 +20,22 @@ const router = createRouter({
     },
     {
       path: '/checkout',
-      name: 'checkout',
-      component: CheckoutView
+      redirect: '/shop'
+    },
+    {
+      path: '/faq',
+      name: 'faq',
+      component: FaqView
     },
     {
       path: '/about',
       name: 'about',
       component: AboutView
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView
     }
   ],
   scrollBehavior() {

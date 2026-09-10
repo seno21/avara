@@ -6,6 +6,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   imageUrl: string;
+  images?: string[];
   secondaryImages?: string[];
   inStock: boolean;
   stockCount: number;
@@ -19,6 +20,7 @@ export interface Product {
   sizes?: string[];
   material?: string;
   dimensions?: string;
+  shopeeUrl?: string;
 }
 
 export interface Review {
