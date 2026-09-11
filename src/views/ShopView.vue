@@ -2,7 +2,7 @@
   <div class="bg-[#F6F4EE] min-h-screen py-10 border-b border-[#E3D9CE]">
     <div class="max-w-7xl mx-auto px-4 lg:px-12">
       <!-- Breadcrumb & Header -->
-      <div class="mb-8 space-y-2">
+      <div class="mb-6 space-y-2">
         <div
           class="flex items-center gap-2 text-xs text-[#6B6B6B] font-sans uppercase tracking-wider"
         >
@@ -11,11 +11,43 @@
           <span class="text-[#1A1A1A] font-semibold">Katalog Belanja</span>
         </div>
 
-        <h1
-          class="font-serif text-3xl md:text-4xl font-extrabold text-[#1A1A1A]"
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h1
+            class="font-serif text-3xl md:text-4xl font-extrabold text-[#1A1A1A]"
+          >
+            Katalog Produk Avara Studio
+          </h1>
+        </div>
+
+        <!-- USER FAVORITES STATUS BANNER -->
+        <div
+          v-if="authStore.currentUser"
+          class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-xs text-emerald-900 shadow-2xs font-sans mt-3"
         >
-          Katalog Produk Avara Studio
-        </h1>
+          <div class="flex items-center gap-2.5">
+            <UserCheck class="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Selamat datang, <strong>{{ authStore.currentUser.fullName }}</strong>! Produk favorit Anda disinkronkan aman di akun Anda (<strong>{{ wishlistStore.wishlistCount }} favorit</strong>).
+            </span>
+          </div>
+        </div>
+        <div
+          v-else
+          class="bg-amber-50/80 border border-amber-200 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs text-amber-900 shadow-2xs font-sans mt-3"
+        >
+          <div class="flex items-center gap-2.5">
+            <Heart class="w-4 h-4 text-[#AD9277] shrink-0" />
+            <span>
+              Anda masuk sebagai <strong>Tamu</strong>. Daftar akun gratis agar daftar favorit Anda tidak hilang!
+            </span>
+          </div>
+          <button
+            @click="authStore.openAuthModal('register')"
+            class="px-3.5 py-1.5 bg-[#2A1D15] hover:bg-[#AD9277] text-white font-bold rounded-full transition-all text-[11px] uppercase tracking-wider cursor-pointer"
+          >
+            Daftar Akun Sekarang
+          </button>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -124,34 +156,53 @@
             </button>
           </div>
 
-          <!-- Empty State -->
+          <!-- Empty State for Wishlist -->
           <div
-            v-if="productStore.filteredProducts.length === 0"
-            class="bg-white p-12 text-center border border-[#E3D9CE] rounded-3xl font-sans"
+            v-if="productStore.filteredProducts.length === 0 && productStore.selectedCategory === 'wishlist'"
+            class="bg-white p-12 text-center border border-[#E3D9CE] rounded-3xl font-sans space-y-3"
           >
-            <PackageSearch class="w-12 h-12 text-[#AD9277] mx-auto mb-3" />
-            <h3 class="font-serif text-lg font-bold text-[#1A1A1A] mb-1">
+            <Heart class="w-12 h-12 text-[#AD9277] mx-auto" />
+            <h3 class="font-serif text-lg font-bold text-[#1A1A1A]">
+              Belum Ada Produk Favorit
+            </h3>
+            <p class="text-xs text-[#6B6B6B] max-w-sm mx-auto">
+              Anda belum menambahkan produk ke daftar favorit. Klik ikon hati pada produk pilihan Anda untuk menyimpannya di sini.
+            </p>
+            <BaseButton variant="primary" @click="resetFilters">
+              Lihat Semua Koleksi
+            </BaseButton>
+          </div>
+
+          <!-- General Empty State -->
+          <div
+            v-else-if="productStore.filteredProducts.length === 0"
+            class="bg-white p-12 text-center border border-[#E3D9CE] rounded-3xl font-sans space-y-3"
+          >
+            <PackageSearch class="w-12 h-12 text-[#AD9277] mx-auto" />
+            <h3 class="font-serif text-lg font-bold text-[#1A1A1A]">
               Produk Tidak Ditemukan
             </h3>
-            <p class="text-xs text-[#6B6B6B] mb-4">
+            <p class="text-xs text-[#6B6B6B]">
               Coba cari kata kunci lain atau ubah kategori pilihan Anda.
             </p>
-            <BaseButton variant="primary" @click="resetFilters"
-              >Lihat Semua Koleksi</BaseButton
-            >
+            <BaseButton variant="primary" @click="resetFilters">
+              Lihat Semua Koleksi
+            </BaseButton>
           </div>
 
           <!-- Product Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div
               v-for="product in productStore.filteredProducts"
               :key="product.id"
               class="bg-white border border-[#E3D9CE] rounded-2xl group flex flex-col justify-between hover:shadow-xl transition-all duration-300 relative overflow-hidden"
             >
-              <!-- Wishlist Heart Button -->
+              <!-- Wishlist Heart Button (Only for logged-in users) -->
               <button
+                v-if="authStore.currentUser"
                 @click="wishlistStore.toggleWishlist(product)"
                 class="absolute top-3 right-3 z-10 bg-white/80 p-2 text-[#1A1A1A] hover:text-red-600 transition-colors rounded-full shadow-xs cursor-pointer"
+                title="Simpan ke favorit akun Anda"
               >
                 <Heart
                   class="w-4 h-4"
@@ -217,26 +268,13 @@
                 <div
                   class="pt-3 border-t border-[#E3D9CE] flex items-center justify-between"
                 >
-                  <div
-                    v-if="product.colors && product.colors.length > 0"
-                    class="flex gap-1"
-                  >
-                    <span
-                      v-for="color in product.colors"
-                      :key="color.name"
-                      class="w-3.5 h-3.5 rounded-full border border-stone-300"
-                      :style="{ backgroundColor: color.hex }"
-                      :title="color.name"
-                    ></span>
-                  </div>
-
-                  <div class="flex items-baseline gap-2">
-                    <span class="font-serif font-bold text-base text-[#3D2B1F]">
+                  <div>
+                    <span class="font-bold text-[#AD9277] text-sm">
                       {{ formatRupiah(product.price) }}
                     </span>
                     <span
                       v-if="product.originalPrice"
-                      class="text-xs text-[#6B6B6B] line-through"
+                      class="text-[10px] text-[#6B6B6B] line-clamp-1 line-through ml-1"
                     >
                       {{ formatRupiah(product.originalPrice) }}
                     </span>
@@ -256,17 +294,20 @@ import { onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useProductStore } from "../store/productStore";
 import { useWishlistStore } from "../store/wishlistStore";
+import { useAuthStore } from "../store/authStore";
 import BaseButton from "../components/common/BaseButton.vue";
 import {
   Search,
   Heart,
   ShoppingBag,
   PackageSearch,
+  UserCheck
 } from "lucide-vue-next";
 
 const route = useRoute();
 const productStore = useProductStore();
 const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
 
 function setCategory(catId: string) {
   productStore.selectedCategory = catId;
@@ -278,18 +319,22 @@ function resetFilters() {
 }
 
 onMounted(() => {
-  if (route.query.category) {
+  if (route.query.filter === 'wishlist' || route.query.category === 'wishlist') {
+    productStore.selectedCategory = 'wishlist';
+  } else if (route.query.category) {
     productStore.selectedCategory = route.query.category as string;
   }
 });
 
 watch(
-  () => route.query.category,
-  (newCat) => {
-    if (newCat) {
+  () => [route.query.category, route.query.filter],
+  ([newCat, newFilter]) => {
+    if (newFilter === 'wishlist' || newCat === 'wishlist') {
+      productStore.selectedCategory = 'wishlist';
+    } else if (newCat) {
       productStore.selectedCategory = newCat as string;
     }
-  },
+  }
 );
 
 function formatRupiah(val: number) {

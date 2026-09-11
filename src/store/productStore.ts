@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import type { Product } from '../types/Product';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useWishlistStore } from './wishlistStore';
 
 export const initialMockProducts: Product[] = [
   {
@@ -305,12 +306,21 @@ export const useProductStore = defineStore('product', () => {
   }
 
   const filteredProducts = computed(() => {
+    // Lazy import or call useWishlistStore inside computed to avoid circular dependency
+    const wishlistStore = useWishlistStore();
     return products.value.filter(product => {
       const matchesSearch = product.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             product.description.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             product.categoryLabel.toLowerCase().includes(searchQuery.value.toLowerCase());
       
-      const matchesCategory = selectedCategory.value === 'all' || product.category === selectedCategory.value;
+      let matchesCategory = false;
+      if (selectedCategory.value === 'all') {
+        matchesCategory = true;
+      } else if (selectedCategory.value === 'wishlist') {
+        matchesCategory = wishlistStore.isInWishlist(product.id);
+      } else {
+        matchesCategory = product.category === selectedCategory.value;
+      }
 
       return matchesSearch && matchesCategory;
     }).sort((a, b) => {
@@ -321,13 +331,17 @@ export const useProductStore = defineStore('product', () => {
     });
   });
 
-  const categories = computed(() => [
-    { id: 'all', name: 'Semua Koleksi', count: products.value.length },
-    { id: 'leather', name: 'Leather Goods', count: products.value.filter(p => p.category === 'leather').length },
-    { id: 'wear', name: 'Busana & Sepatu', count: products.value.filter(p => p.category === 'wear').length },
-    { id: 'accessories', name: 'Aksesoris & Jam', count: products.value.filter(p => p.category === 'accessories').length },
-    { id: 'fragrance', name: 'Parfum & Wewangian', count: products.value.filter(p => p.category === 'fragrance').length }
-  ]);
+  const categories = computed(() => {
+    const wishlistStore = useWishlistStore();
+    return [
+      { id: 'all', name: 'Semua Koleksi', count: products.value.length },
+      { id: 'wishlist', name: '❤️ Favorit Saya', count: wishlistStore.wishlistCount },
+      { id: 'leather', name: 'Leather Goods', count: products.value.filter(p => p.category === 'leather').length },
+      { id: 'wear', name: 'Busana & Sepatu', count: products.value.filter(p => p.category === 'wear').length },
+      { id: 'accessories', name: 'Aksesoris & Jam', count: products.value.filter(p => p.category === 'accessories').length },
+      { id: 'fragrance', name: 'Parfum & Wewangian', count: products.value.filter(p => p.category === 'fragrance').length }
+    ];
+  });
 
   function openQuickView(product: Product) {
     quickViewProduct.value = product;

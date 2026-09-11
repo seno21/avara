@@ -39,8 +39,9 @@
             <BaseBadge v-if="product.isNewArrival" variant="dark">New</BaseBadge>
           </div>
 
-          <!-- Wishlist Heart Button -->
+          <!-- Wishlist Heart Button (Only for logged-in users) -->
           <button
+            v-if="authStore.currentUser"
             @click="wishlistStore.toggleWishlist(product)"
             class="absolute top-3 right-3 z-10 bg-white/80 p-2.5 text-[#1A1A1A] hover:text-red-600 transition-colors rounded-full shadow-xs cursor-pointer hover:scale-110"
             :title="wishlistStore.isInWishlist(product.id) ? 'Hapus dari Wishlist' : 'Tambah ke Wishlist'"
@@ -125,12 +126,14 @@
 import { ref, computed } from 'vue';
 import { useProductStore } from '../../store/productStore';
 import { useWishlistStore } from '../../store/wishlistStore';
+import { useAuthStore } from '../../store/authStore';
 import BaseButton from '../common/BaseButton.vue';
 import BaseBadge from '../common/BaseBadge.vue';
 import { Heart, ShoppingBag } from 'lucide-vue-next';
 
 const productStore = useProductStore();
 const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
 
 const activeCategory = ref('all');
 

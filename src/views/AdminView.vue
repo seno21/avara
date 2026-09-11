@@ -1,6 +1,71 @@
 <template>
   <div class="bg-[#F6F4EE] min-h-screen py-10 border-b border-[#E3D9CE]">
-    <div class="max-w-7xl mx-auto px-4 lg:px-12 font-sans">
+    <!-- ADMIN LOGIN GATE -->
+    <div v-if="!authStore.isAdminLoggedIn" class="max-w-md mx-auto px-4 py-12">
+      <div class="bg-white border border-[#E3D9CE] rounded-3xl shadow-xl p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <div class="w-14 h-14 bg-[#2A1D15] rounded-2xl flex items-center justify-center mx-auto text-[#AD9277] shadow-md">
+            <Lock class="w-7 h-7" />
+          </div>
+          <h2 class="font-serif text-2xl font-bold text-[#1A1A1A]">Login Admin Studio</h2>
+          <p class="text-xs text-[#6B6B6B]">Masukkan akun pengelola untuk mengakses Dashboard Admin.</p>
+        </div>
+
+        <form @submit.prevent="handleAdminLogin" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold uppercase text-[#1A1A1A] mb-1">Username Admin</label>
+            <div class="relative">
+              <input
+                v-model="adminUser"
+                type="text"
+                required
+                placeholder="Username (admin)"
+                class="w-full pl-10 pr-4 py-2.5 bg-[#F6F4EE] border border-[#E3D9CE] rounded-xl text-xs font-medium focus:outline-none focus:border-[#AD9277]"
+              />
+              <User class="w-4 h-4 text-[#AD9277] absolute left-3.5 top-3" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-[#1A1A1A] mb-1">Password Admin</label>
+            <div class="relative">
+              <input
+                v-model="adminPass"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                placeholder="Password admin"
+                class="w-full pl-10 pr-10 py-2.5 bg-[#F6F4EE] border border-[#E3D9CE] rounded-xl text-xs font-medium focus:outline-none focus:border-[#AD9277]"
+              />
+              <Lock class="w-4 h-4 text-[#AD9277] absolute left-3.5 top-3" />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 top-3 text-[#6B6B6B] hover:text-[#1A1A1A]"
+              >
+                <Eye v-if="!showPassword" class="w-4 h-4" />
+                <EyeOff v-else class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full py-3 bg-[#2A1D15] hover:bg-[#AD9277] text-[#F6F4EE] text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 mt-2"
+          >
+            <LogIn class="w-4 h-4" />
+            <span>Masuk Dashboard</span>
+          </button>
+        </form>
+
+        <div class="bg-[#F6F4EE] p-3 rounded-xl border border-[#E3D9CE] text-[11px] text-[#6B6B6B] flex items-start gap-2">
+          <Clock class="w-4 h-4 text-[#AD9277] shrink-0 mt-0.5" />
+          <span>Sesi admin dilengkapi proteksi otomatis. Jika tidak ada aktivitas selama 15 menit, sesi akan ditutup otomatis.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN ADMIN DASHBOARD CONTENT -->
+    <div v-else class="max-w-7xl mx-auto px-4 lg:px-12 font-sans">
       <!-- Breadcrumb & Header -->
       <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 border-b border-[#E3D9CE] pb-6">
         <div>
@@ -9,11 +74,15 @@
             <span>/</span>
             <span class="text-[#1A1A1A] font-semibold">Dashboard Pengelola</span>
           </div>
-          <h1 class="font-serif text-3xl font-extrabold text-[#1A1A1A] flex items-center gap-3">
+          <h1 class="font-serif text-3xl font-extrabold text-[#1A1A1A] flex flex-wrap items-center gap-3">
             <span>Admin & Konten Studio</span>
             <span class="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-sans font-semibold border border-emerald-300 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
               Firebase Terhubung
+            </span>
+            <span class="text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded-full font-sans font-semibold border border-amber-300 flex items-center gap-1.5" title="Otomatis logout jika 15 menit inaktif">
+              <Clock class="w-3.5 h-3.5 text-amber-700" />
+              Sesi Admin Aktif (Timeout 15 mnt)
             </span>
           </h1>
         </div>
@@ -36,6 +105,15 @@
           >
             <Plus class="w-4 h-4" />
             <span>Tambah Produk Baru</span>
+          </button>
+
+          <button
+            @click="authStore.adminLogoutManual"
+            class="px-4 py-2.5 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold rounded-full hover:bg-rose-600 hover:text-white transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Keluar dari sesi Admin"
+          >
+            <LogOut class="w-4 h-4" />
+            <span>Keluar Admin</span>
           </button>
         </div>
       </div>
@@ -69,108 +147,127 @@
             <input
               type="text"
               v-model="adminSearch"
-              placeholder="Cari nama atau ID produk..."
-              class="w-full pl-9 pr-3 py-2 text-xs border border-[#E3D9CE] rounded-full focus:outline-none focus:border-[#AD9277]"
+              placeholder="Cari ID atau nama produk..."
+              class="w-full pl-9 pr-4 py-2 bg-[#F6F4EE] border border-[#E3D9CE] rounded-full text-xs focus:outline-none focus:border-[#AD9277]"
             />
-            <Search class="w-4 h-4 absolute left-3 top-2.5 text-[#6B6B6B]" />
+            <Search class="w-4 h-4 text-[#AD9277] absolute left-3 top-2.5" />
           </div>
 
           <div class="text-xs text-[#6B6B6B]">
-            Menampilkan <strong class="text-[#1A1A1A]">{{ filteredAdminProducts.length }}</strong> dari {{ productStore.products.length }} Produk
+            Menampilkan <strong class="text-[#1A1A1A]">{{ filteredAdminProducts.length }}</strong> dari {{ productStore.products.length }} total produk
           </div>
         </div>
 
-        <!-- Products Table / Cards -->
-        <div class="bg-white border border-[#E3D9CE] rounded-2xl overflow-hidden shadow-xs">
+        <!-- Product Table -->
+        <div class="bg-white border border-[#E3D9CE] rounded-2xl overflow-hidden shadow-2xs">
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse text-xs">
               <thead>
-                <tr class="bg-[#F3EDE6] text-[#3D2B1F] text-xs uppercase tracking-wider font-serif border-b border-[#E3D9CE]">
+                <tr class="bg-[#2A1D15] text-[#F6F4EE] uppercase tracking-wider font-semibold">
                   <th class="p-4">Produk</th>
                   <th class="p-4">Kategori</th>
-                  <th class="p-4">Harga</th>
+                  <th class="p-4">Harga & Stok</th>
+                  <th class="p-4">Status & Badge</th>
                   <th class="p-4">Tautan Shopee</th>
-                  <th class="p-4">Stok</th>
                   <th class="p-4 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-[#E3D9CE] text-xs">
+              <tbody class="divide-y divide-[#E3D9CE]">
                 <tr
                   v-for="prod in filteredAdminProducts"
                   :key="prod.id"
-                  class="hover:bg-[#F6F4EE]/60 transition-colors"
+                  class="hover:bg-[#F6F4EE]/50 transition-colors"
                 >
-                  <!-- Product Image & Title -->
+                  <!-- Info Produk -->
                   <td class="p-4">
                     <div class="flex items-center gap-3">
                       <img
                         :src="prod.imageUrl"
                         :alt="prod.name"
-                        class="w-12 h-12 object-cover rounded-xl border border-[#E3D9CE] bg-stone-100 shrink-0"
+                        class="w-12 h-12 rounded-xl object-cover border border-[#E3D9CE] shrink-0"
                       />
                       <div>
-                        <div class="font-serif font-bold text-sm text-[#1A1A1A]">{{ prod.name }}</div>
-                        <div class="text-[11px] text-[#6B6B6B] italic">{{ prod.tagline }}</div>
-                        <div class="flex gap-1 mt-1">
-                          <span v-if="prod.isBestSeller" class="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-semibold">Best Seller</span>
-                          <span v-if="prod.isNewArrival" class="text-[9px] bg-stone-200 text-stone-800 px-1.5 py-0.5 rounded font-semibold">New</span>
-                        </div>
+                        <div class="font-bold text-[#1A1A1A] text-sm">{{ prod.name }}</div>
+                        <div class="text-[11px] text-[#6B6B6B] font-mono">ID: {{ prod.id }}</div>
                       </div>
                     </div>
                   </td>
 
-                  <!-- Category -->
+                  <!-- Kategori -->
                   <td class="p-4">
-                    <span class="px-2.5 py-1 bg-[#F3EDE6] text-[#3D2B1F] rounded-full font-medium text-[11px]">
+                    <span class="px-2.5 py-1 bg-[#F6F4EE] text-[#3D2B1F] border border-[#E3D9CE] rounded-full font-semibold">
                       {{ prod.categoryLabel }}
                     </span>
                   </td>
 
-                  <!-- Price -->
+                  <!-- Harga & Stok -->
                   <td class="p-4">
-                    <div class="font-bold text-[#3D2B1F]">{{ formatRupiah(prod.price) }}</div>
-                    <div v-if="prod.originalPrice" class="text-[11px] text-stone-400 line-through">
+                    <div class="font-bold text-[#AD9277]">{{ formatRupiah(prod.price) }}</div>
+                    <div v-if="prod.originalPrice" class="line-through text-[10px] text-[#6B6B6B]">
                       {{ formatRupiah(prod.originalPrice) }}
+                    </div>
+                    <div class="text-[11px] mt-1 font-semibold text-[#1A1A1A]">
+                      Stok: {{ prod.stockCount || 0 }} unit
+                    </div>
+                  </td>
+
+                  <!-- Status & Badge -->
+                  <td class="p-4">
+                    <div class="flex flex-wrap gap-1">
+                      <span
+                        v-if="prod.inStock"
+                        class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold rounded-md"
+                      >
+                        Tersedia
+                      </span>
+                      <span
+                        v-else
+                        class="px-2 py-0.5 bg-rose-100 text-rose-800 text-[10px] font-bold rounded-md"
+                      >
+                        Habis
+                      </span>
+
+                      <span
+                        v-if="prod.isBestSeller"
+                        class="px-2 py-0.5 bg-amber-100 text-amber-900 text-[10px] font-bold rounded-md"
+                      >
+                        Best Seller
+                      </span>
+                      <span
+                        v-if="prod.isNewArrival"
+                        class="px-2 py-0.5 bg-sky-100 text-sky-900 text-[10px] font-bold rounded-md"
+                      >
+                        Terbaru
+                      </span>
                     </div>
                   </td>
 
                   <!-- Shopee Link -->
-                  <td class="p-4 max-w-xs">
+                  <td class="p-4">
                     <a
                       :href="prod.shopeeUrl || 'https://shopee.co.id'"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="text-[#EE4D2D] hover:underline flex items-center gap-1 font-semibold truncate text-[11px]"
+                      class="text-xs text-[#EE4D2D] hover:underline font-semibold flex items-center gap-1 max-w-[150px] truncate"
                     >
                       <ShoppingBag class="w-3.5 h-3.5 shrink-0" />
                       <span class="truncate">{{ prod.shopeeUrl || 'shopee.co.id' }}</span>
-                      <ExternalLink class="w-3 h-3 shrink-0" />
                     </a>
                   </td>
 
-                  <!-- Stock -->
-                  <td class="p-4">
-                    <span
-                      class="px-2 py-0.5 rounded text-[11px] font-semibold"
-                      :class="prod.inStock ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'"
-                    >
-                      {{ prod.inStock ? `Tersedia (${prod.stockCount})` : 'Habis' }}
-                    </span>
-                  </td>
-
-                  <!-- Actions -->
+                  <!-- Action Buttons -->
                   <td class="p-4 text-right">
                     <div class="flex items-center justify-end gap-2">
                       <button
                         @click="openEditModal(prod)"
-                        class="p-2 bg-stone-100 hover:bg-[#AD9277] hover:text-white text-[#1A1A1A] rounded-lg transition-colors cursor-pointer"
+                        class="p-2 text-[#3D2B1F] hover:bg-[#AD9277] hover:text-white rounded-lg transition-all"
                         title="Edit Produk"
                       >
-                        <Pencil class="w-4 h-4" />
+                        <Edit class="w-4 h-4" />
                       </button>
                       <button
                         @click="confirmDelete(prod)"
-                        class="p-2 bg-red-50 hover:bg-red-600 hover:text-white text-red-600 rounded-lg transition-colors cursor-pointer"
+                        class="p-2 text-rose-600 hover:bg-rose-600 hover:text-white rounded-lg transition-all"
                         title="Hapus Produk"
                       >
                         <Trash2 class="w-4 h-4" />
@@ -185,256 +282,277 @@
       </div>
 
       <!-- TAB 2: SITE CONTENT & SHOPEE SETTINGS -->
-      <div v-if="activeTab === 'content'" class="max-w-3xl space-y-6">
-        <div class="bg-white p-6 border border-[#E3D9CE] rounded-2xl shadow-xs space-y-5">
-          <h2 class="font-serif text-xl font-bold text-[#1A1A1A]">Pengaturan Banner & Shopee Store</h2>
+      <div v-if="activeTab === 'content'" class="bg-white p-6 lg:p-8 border border-[#E3D9CE] rounded-3xl shadow-2xs">
+        <h2 class="font-serif text-xl font-bold text-[#1A1A1A] mb-6">Pengaturan Banner & Shopee Store</h2>
 
-          <div class="space-y-4">
-            <!-- Shopee Store URL -->
+        <form @submit.prevent="saveContentSettings" class="space-y-6 max-w-2xl">
+          <div>
+            <label class="block text-xs font-bold uppercase text-[#1A1A1A] mb-2">
+              Tautan Utama Toko Shopee Official:
+            </label>
+            <input
+              type="text"
+              v-model="contentForm.shopeeStoreUrl"
+              placeholder="https://shopee.co.id/nama_toko"
+              class="w-full px-4 py-2.5 bg-[#F6F4EE] border border-[#E3D9CE] rounded-xl text-xs focus:outline-none focus:border-[#AD9277]"
+            />
+            <p class="text-[11px] text-[#6B6B6B] mt-1">Tautan ini digunakan saat pengunjung menekan tombol Shopee di Header/Navbar.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-[#1A1A1A] mb-2">
+              Judul Utama Hero Banner (Headline):
+            </label>
+            <input
+              type="text"
+              v-model="contentForm.heroHeadline"
+              class="w-full px-4 py-2.5 bg-[#F6F4EE] border border-[#E3D9CE] rounded-xl text-xs focus:outline-none focus:border-[#AD9277]"
+            />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase text-[#1A1A1A] mb-2">
+              Sub-judul Hero Banner (Deskripsi Singkat):
+            </label>
+            <textarea
+              v-model="contentForm.heroSubheadline"
+              rows="3"
+              class="w-full px-4 py-2.5 bg-[#F6F4EE] border border-[#E3D9CE] rounded-xl text-xs focus:outline-none focus:border-[#AD9277]"
+            ></textarea>
+          </div>
+
+          <button
+            type="submit"
+            class="px-6 py-3 bg-[#2A1D15] hover:bg-[#AD9277] text-[#F6F4EE] text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            Simpan Pengaturan Utama
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- MODAL FORM EDIT / ADD PRODUCT -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in overflow-y-auto"
+    >
+      <div class="bg-[#F6F4EE] border border-[#E3D9CE] rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden my-8">
+        <!-- Modal Header -->
+        <div class="bg-[#2A1D15] text-[#F6F4EE] px-6 py-4 flex items-center justify-between">
+          <h3 class="font-serif text-lg font-bold">
+            {{ isEditing ? 'Edit Produk' : 'Tambah Produk Baru' }}
+          </h3>
+          <button @click="showModal = false" class="text-[#AD9277] hover:text-white transition-colors">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <form @submit.prevent="saveProductForm" class="p-6 space-y-4 font-sans text-xs">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- ID & Name -->
             <div>
-              <label class="block text-xs uppercase font-bold text-[#1A1A1A] mb-1">
-                Tautan Utama Toko Shopee Official:
-              </label>
+              <label class="block font-bold text-[#1A1A1A] mb-1">ID Produk *</label>
               <input
                 type="text"
-                v-model="contentForm.shopeeStoreUrl"
-                placeholder="https://shopee.co.id/nama_toko"
-                class="w-full p-3 text-xs border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+                v-model="form.id"
+                :disabled="isEditing"
+                placeholder="avara-007"
+                required
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277] disabled:bg-stone-200"
               />
-              <p class="text-[11px] text-[#6B6B6B] mt-1">Tautan ini digunakan saat pengunjung menekan tombol Shopee di Header/Navbar.</p>
             </div>
-
-            <!-- Hero Headline -->
             <div>
-              <label class="block text-xs uppercase font-bold text-[#1A1A1A] mb-1">
-                Judul Utama Hero Banner (Homepage):
-              </label>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Nama Produk *</label>
               <input
                 type="text"
-                v-model="contentForm.heroHeadline"
-                class="w-full p-3 text-xs border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+                v-model="form.name"
+                placeholder="Avara Handbag Leather"
+                required
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
               />
             </div>
+          </div>
 
-            <!-- Hero Subheadline -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Category & Tagline -->
             <div>
-              <label class="block text-xs uppercase font-bold text-[#1A1A1A] mb-1">
-                Deskripsi Singkat Banner:
-              </label>
-              <textarea
-                rows="3"
-                v-model="contentForm.heroSubheadline"
-                class="w-full p-3 text-xs border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
-              ></textarea>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Kategori *</label>
+              <select
+                v-model="form.category"
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              >
+                <option value="leather">Leather Goods</option>
+                <option value="wear">Busana & Sepatu</option>
+                <option value="accessories">Aksesoris & Jam</option>
+                <option value="fragrance">Parfum & Wewangian</option>
+                <option value="home">Home & Living</option>
+              </select>
             </div>
+            <div>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Tagline Singkat</label>
+              <input
+                type="text"
+                v-model="form.tagline"
+                placeholder="Tas Kulit Handcrafted"
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              />
+            </div>
+          </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Price, Original Price, Stock -->
+            <div>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Harga (Rp) *</label>
+              <input
+                type="number"
+                v-model.number="form.price"
+                required
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Harga Coret (Rp)</label>
+              <input
+                type="number"
+                v-model.number="form.originalPrice"
+                placeholder="Opsional"
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              />
+            </div>
+            <div>
+              <label class="block font-bold text-[#1A1A1A] mb-1">Jumlah Stok *</label>
+              <input
+                type="number"
+                v-model.number="form.stockCount"
+                required
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              />
+            </div>
+          </div>
+
+          <!-- Shopee Image URL & Live Preview -->
+          <div>
+            <label class="block font-bold text-[#1A1A1A] mb-1">URL Gambar Produk (Shopee / CDN / Web) *</label>
+            <div class="flex gap-2 items-center">
+              <input
+                type="text"
+                v-model="form.imageUrl"
+                required
+                placeholder="https://cf.shopee.co.id/file/... atau /images/product_tote.jpg"
+                class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+              />
+              <img
+                v-if="form.imageUrl"
+                :src="form.imageUrl"
+                alt="Preview"
+                class="w-10 h-10 rounded-lg object-cover border border-[#E3D9CE] shrink-0"
+              />
+            </div>
+          </div>
+
+          <!-- Shopee Product URL -->
+          <div>
+            <label class="block font-bold text-[#1A1A1A] mb-1">Tautan Produk Shopee (URL Beli) *</label>
+            <input
+              type="text"
+              v-model="form.shopeeUrl"
+              required
+              placeholder="https://shopee.co.id/product-name-i.123456.78910"
+              class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+            />
+          </div>
+
+          <!-- Badges & Checkboxes -->
+          <div class="flex flex-wrap gap-6 py-2 border-y border-[#E3D9CE]">
+            <label class="flex items-center gap-2 font-semibold cursor-pointer">
+              <input type="checkbox" v-model="form.inStock" class="accent-[#AD9277]" />
+              <span>Status Stok Tersedia</span>
+            </label>
+
+            <label class="flex items-center gap-2 font-semibold cursor-pointer">
+              <input type="checkbox" v-model="form.isBestSeller" class="accent-[#AD9277]" />
+              <span>Best Seller Badge</span>
+            </label>
+
+            <label class="flex items-center gap-2 font-semibold cursor-pointer">
+              <input type="checkbox" v-model="form.isNewArrival" class="accent-[#AD9277]" />
+              <span>Produk Terbaru Badge</span>
+            </label>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label class="block font-bold text-[#1A1A1A] mb-1">Deskripsi Lengkap Produk</label>
+            <textarea
+              v-model="form.description"
+              rows="3"
+              class="w-full px-3 py-2 bg-white border border-[#E3D9CE] rounded-xl focus:outline-none focus:border-[#AD9277]"
+            ></textarea>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex justify-end gap-3 pt-3">
             <button
-              @click="saveContentSettings"
-              :disabled="contentStore.isLoading"
-              class="px-6 py-3 bg-[#2A1D15] hover:bg-[#AD9277] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all cursor-pointer shadow-md"
+              type="button"
+              @click="showModal = false"
+              class="px-4 py-2 bg-stone-200 text-[#1A1A1A] rounded-xl font-semibold hover:bg-stone-300 transition-colors"
             >
-              {{ contentStore.isLoading ? 'Menyimpan...' : 'Simpan Pengaturan Content' }}
+              Batal
+            </button>
+            <button
+              type="submit"
+              class="px-6 py-2 bg-[#2A1D15] hover:bg-[#AD9277] text-white rounded-xl font-bold transition-all shadow-md"
+            >
+              Simpan ke Firebase
             </button>
           </div>
-        </div>
+        </form>
       </div>
-
-      <!-- PRODUCT ADD / EDIT MODAL -->
-      <Teleport to="body">
-        <div
-          v-if="showModal"
-          class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto"
-          @click="showModal = false"
-        >
-          <div
-            @click.stop
-            class="bg-white max-w-2xl w-full border border-[#E3D9CE] shadow-2xl rounded-3xl p-6 sm:p-8 my-8 relative max-h-[90vh] overflow-y-auto"
-          >
-            <!-- Modal Header -->
-            <div class="flex items-center justify-between pb-4 mb-6 border-b border-[#E3D9CE]">
-              <h3 class="font-serif text-xl font-bold text-[#1A1A1A]">
-                {{ isEditing ? 'Edit Produk' : 'Tambah Produk Baru' }}
-              </h3>
-              <button @click="showModal = false" class="p-2 hover:bg-stone-100 rounded-full cursor-pointer">
-                <X class="w-5 h-5 text-[#1A1A1A]" />
-              </button>
-            </div>
-
-            <!-- Modal Form -->
-            <form @submit.prevent="saveProductForm" class="space-y-4 text-xs font-sans">
-              <!-- Name & Tagline -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Nama Produk *</label>
-                  <input
-                    type="text"
-                    required
-                    v-model="form.name"
-                    placeholder="Contoh: Avara Leather Tote"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Tagline Ringkas</label>
-                  <input
-                    type="text"
-                    v-model="form.tagline"
-                    placeholder="Contoh: Tas Kulit Premium Handcrafted"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <!-- Category & Prices -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Kategori *</label>
-                  <select
-                    v-model="form.category"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none bg-white"
-                  >
-                    <option value="leather">Leather Goods</option>
-                    <option value="wear">Busana & Sepatu</option>
-                    <option value="accessories">Aksesoris & Jam</option>
-                    <option value="fragrance">Parfum & Wewangian</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Harga (IDR) *</label>
-                  <input
-                    type="number"
-                    required
-                    v-model.number="form.price"
-                    placeholder="2500000"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Harga Coret / Original (IDR)</label>
-                  <input
-                    type="number"
-                    v-model.number="form.originalPrice"
-                    placeholder="2800000"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <!-- Shopee Image URL & Live Preview -->
-              <div>
-                <label class="block uppercase font-bold text-[#1A1A1A] mb-1">
-                  URL Gambar Produk (Shopee / CDN / Web) *
-                </label>
-                <div class="flex gap-2">
-                  <input
-                    type="text"
-                    required
-                    v-model="form.imageUrl"
-                    placeholder="https://cf.shopee.co.id/file/... atau /images/product_tote.jpg"
-                    class="flex-1 p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-                <div v-if="form.imageUrl" class="mt-2 flex items-center gap-3 bg-[#F6F4EE] p-2 rounded-xl">
-                  <img :src="form.imageUrl" alt="Preview" class="w-12 h-12 object-cover rounded-lg border border-[#E3D9CE]" />
-                  <span class="text-[11px] text-stone-500">Preview Gambar Utama</span>
-                </div>
-              </div>
-
-              <!-- Shopee Product URL -->
-              <div>
-                <label class="block uppercase font-bold text-[#1A1A1A] mb-1">
-                  Tautan Produk Shopee (URL Beli) *
-                </label>
-                <input
-                  type="text"
-                  required
-                  v-model="form.shopeeUrl"
-                  placeholder="https://shopee.co.id/product-name-i.123456.78910"
-                  class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                />
-              </div>
-
-              <!-- Stock & Badges -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#E3D9CE]">
-                <div>
-                  <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Jumlah Stok</label>
-                  <input
-                    type="number"
-                    v-model.number="form.stockCount"
-                    class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                  />
-                </div>
-
-                <div class="flex items-center gap-2 pt-6">
-                  <input type="checkbox" id="inStock" v-model="form.inStock" class="w-4 h-4 accent-[#AD9277]" />
-                  <label for="inStock" class="font-semibold text-[#1A1A1A]">Tersedia dalam Stok</label>
-                </div>
-
-                <div class="flex items-center gap-2 pt-6">
-                  <input type="checkbox" id="isBestSeller" v-model="form.isBestSeller" class="w-4 h-4 accent-[#AD9277]" />
-                  <label for="isBestSeller" class="font-semibold text-[#1A1A1A]">Set sebagai Best Seller</label>
-                </div>
-              </div>
-
-              <!-- Description -->
-              <div>
-                <label class="block uppercase font-bold text-[#1A1A1A] mb-1">Deskripsi Lengkap</label>
-                <textarea
-                  rows="3"
-                  v-model="form.description"
-                  placeholder="Deskripsikan bahan, pembuatan, dan keunggulan produk..."
-                  class="w-full p-2.5 border border-[#E3D9CE] rounded-xl focus:border-[#AD9277] focus:outline-none"
-                ></textarea>
-              </div>
-
-              <!-- Modal Footer Actions -->
-              <div class="pt-4 border-t border-[#E3D9CE] flex justify-end gap-3">
-                <button
-                  type="button"
-                  @click="showModal = false"
-                  class="px-5 py-2.5 border border-[#E3D9CE] rounded-full text-[#1A1A1A] hover:bg-stone-100 font-semibold cursor-pointer"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  :disabled="productStore.isSyncing"
-                  class="px-6 py-2.5 bg-[#2A1D15] hover:bg-[#AD9277] text-white font-bold uppercase tracking-wider rounded-full shadow-md cursor-pointer transition-all"
-                >
-                  {{ productStore.isSyncing ? 'Menyimpan...' : 'Simpan Produk ke Firebase' }}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </Teleport>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { useProductStore } from '../store/productStore';
 import { useContentStore } from '../store/contentStore';
+import { useAuthStore } from '../store/authStore';
 import type { Product } from '../types/Product';
 import {
   Package,
   Sliders,
   Plus,
-  Search,
-  Pencil,
+  Edit,
   Trash2,
+  Search,
   Database,
   ShoppingBag,
-  ExternalLink,
+  Clock,
+  Lock,
+  User,
+  LogIn,
+  LogOut,
+  Eye,
+  EyeOff,
   X
 } from 'lucide-vue-next';
 
 const productStore = useProductStore();
 const contentStore = useContentStore();
+const authStore = useAuthStore();
+
+// Admin login form state
+const adminUser = ref('');
+const adminPass = ref('');
+const showPassword = ref(false);
+
+function handleAdminLogin() {
+  if (authStore.adminLogin(adminUser.value, adminPass.value)) {
+    adminUser.value = '';
+    adminPass.value = '';
+  }
+}
 
 const activeTab = ref<'products' | 'content'>('products');
 const adminSearch = ref('');

@@ -168,6 +168,7 @@
                 </a>
 
                 <button
+                  v-if="authStore.currentUser"
                   @click="wishlistStore.toggleWishlist(product)"
                   class="p-3 border border-[#E3D9CE] bg-white rounded-full hover:border-[#AD9277] transition-colors cursor-pointer"
                   :class="
@@ -199,11 +200,13 @@
 import { ref, computed, watch } from "vue";
 import { useProductStore } from "../../store/productStore";
 import { useWishlistStore } from "../../store/wishlistStore";
+import { useAuthStore } from "../../store/authStore";
 import BaseBadge from "../common/BaseBadge.vue";
 import { X, ShoppingBag, Heart, ExternalLink } from "lucide-vue-next";
 
 const productStore = useProductStore();
 const wishlistStore = useWishlistStore();
+const authStore = useAuthStore();
 
 const product = computed(() => productStore.quickViewProduct!);
 const quantity = ref(1);

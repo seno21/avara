@@ -1,20 +1,5 @@
 <template>
   <header class="sticky top-0 z-40 w-full transition-all duration-300">
-    <!-- Announcement Bar -->
-    <!-- <div
-      class="bg-[#2A1D15] text-[#F6F4EE] text-[11px] font-sans tracking-widest uppercase py-2 px-4 text-center flex items-center justify-center gap-2"
-    >
-      <Sparkles class="w-3.5 h-3.5 text-[#AD9277] animate-pulse" />
-      <span
-        >Gunakan kode
-        <strong class="text-[#AD9277] underline">AVARA10</strong> diskon 10% |
-        Gratis Ongkir Indonesia min. Rp 3 Juta</span
-      >
-      <Sparkles
-        class="w-3.5 h-3.5 text-[#AD9277] animate-pulse hidden sm:inline-block"
-      />
-    </div> -->
-
     <!-- Main Navigation Header -->
     <nav class="glass-header border-b border-[#E6E0D4] px-4 lg:px-12 py-4">
       <div class="max-w-7xl mx-auto flex items-center justify-between">
@@ -68,24 +53,7 @@
               class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
             ></span>
           </router-link>
-          <router-link
-            to="/shop?category=leather"
-            class="hover:text-[#AD9277] transition-colors py-1 relative group"
-          >
-            Leather Goods
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
-            ></span>
-          </router-link>
-          <router-link
-            to="/shop?category=wear"
-            class="hover:text-[#AD9277] transition-colors py-1 relative group"
-          >
-            Busana
-            <span
-              class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
-            ></span>
-          </router-link>
+
           <router-link
             to="/about"
             class="hover:text-[#AD9277] transition-colors py-1 relative group"
@@ -106,17 +74,26 @@
               class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#AD9277] rounded-full transition-all duration-300 group-hover:w-full"
             ></span>
           </router-link>
+          <router-link
+            v-if="authStore.isAdminLoggedIn"
+            to="/admin"
+            class="text-[#AD9277] hover:text-[#2A1D15] font-bold transition-colors py-1 relative flex items-center gap-1"
+          >
+            <ShieldCheck class="w-3.5 h-3.5" />
+            <span>Admin</span>
+          </router-link>
         </div>
 
         <!-- Right Action Icons -->
-        <div class="flex items-center gap-4 sm:gap-6 text-[#1A1A1A]">
-          <!-- Wishlist Toggle -->
+        <div class="flex items-center gap-3 sm:gap-5 text-[#1A1A1A]">
+          <!-- Wishlist Toggle (Only for logged-in users) -->
           <router-link
-            to="/shop"
+            v-if="authStore.currentUser"
+            to="/shop?filter=wishlist"
             class="relative p-2 hover:text-[#AD9277] hover:bg-stone-100 transition-colors rounded-full"
-            title="Wishlist"
+            title="Favorit Akun Tersimpan"
           >
-            <Heart class="w-5 h-5" />
+            <Heart class="w-5 h-5" :class="wishlistStore.wishlistCount > 0 ? 'fill-[#AD9277] text-[#AD9277]' : ''" />
             <span
               v-if="wishlistStore.wishlistCount > 0"
               class="absolute -top-0.5 -right-0.5 bg-[#AD9277] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
@@ -125,17 +102,85 @@
             </span>
           </router-link>
 
-          <!-- Shopee Store Link -->
+          <!-- Shopee Store Link (Logo Only) -->
           <a
-            href="https://shopee.co.id/avarastudio"
+            :href="contentStore.content.shopeeStoreUrl || 'https://shopee.co.id/avarastudio'"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full bg-[#EE4D2D]/10 text-[#EE4D2D] hover:bg-[#EE4D2D] hover:text-white transition-all cursor-pointer shadow-2xs"
-            title="Toko Shopee Official Avara Studio"
+            class="relative p-2 text-[#1A1A1A] hover:text-[#AD9277] hover:bg-stone-100 transition-colors rounded-full"
+            title="Toko Official Shopee Avara Studio"
           >
-            <ShoppingBag class="w-3.5 h-3.5" />
-            <span>Shopee</span>
+            <ShoppingBag class="w-5 h-5" />
           </a>
+
+          <!-- USER AUTHENTICATION CONTAINER -->
+          <div class="relative">
+            <!-- LOGGED IN USER STATE -->
+            <div v-if="authStore.currentUser" class="relative group">
+              <button
+                @click="userMenuOpen = !userMenuOpen"
+                class="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#E3D9CE] rounded-full hover:border-[#AD9277] transition-all cursor-pointer"
+              >
+                <div class="w-6 h-6 rounded-full bg-[#2A1D15] text-[#F6F4EE] flex items-center justify-center text-[10px] font-bold">
+                  {{ authStore.currentUser.fullName.charAt(0).toUpperCase() }}
+                </div>
+                <span class="text-xs font-semibold text-[#1A1A1A] max-w-[100px] truncate hidden sm:inline-block">
+                  {{ authStore.currentUser.fullName }}
+                </span>
+                <ChevronDown class="w-3.5 h-3.5 text-[#6B6B6B]" />
+              </button>
+
+              <!-- USER DROPDOWN -->
+              <div
+                v-if="userMenuOpen"
+                class="absolute right-0 mt-2 w-64 bg-white border border-[#E3D9CE] rounded-2xl shadow-xl p-3 z-50 text-xs space-y-2 animate-fade-in"
+              >
+                <div class="p-2.5 bg-[#F6F4EE] rounded-xl border border-[#E3D9CE]">
+                  <div class="font-bold text-[#1A1A1A] text-sm">{{ authStore.currentUser.fullName }}</div>
+                  <div class="text-[11px] text-[#6B6B6B] truncate">{{ authStore.currentUser.email }}</div>
+                  <div class="text-[10px] text-[#AD9277] font-semibold mt-1">WA: {{ authStore.currentUser.phone }}</div>
+                  <div v-if="authStore.currentUser.address" class="text-[10px] text-[#6B6B6B] mt-1 pt-1 border-t border-[#E3D9CE] truncate">
+                    📍 {{ authStore.currentUser.address.regencyName }}, {{ authStore.currentUser.address.provinceName }}
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <router-link
+                    to="/shop?filter=wishlist"
+                    @click="userMenuOpen = false"
+                    class="w-full flex items-center justify-between p-2 hover:bg-[#F6F4EE] rounded-lg text-[#1A1A1A] font-medium"
+                  >
+                    <span class="flex items-center gap-2">
+                      <Heart class="w-4 h-4 text-[#AD9277]" />
+                      Favorit Tersimpan
+                    </span>
+                    <span class="bg-[#AD9277] text-white px-2 py-0.5 rounded-full text-[10px] font-bold">
+                      {{ wishlistStore.wishlistCount }}
+                    </span>
+                  </router-link>
+
+                  <button
+                    @click="handleLogout"
+                    class="w-full flex items-center gap-2 p-2 hover:bg-rose-50 text-rose-600 rounded-lg font-semibold cursor-pointer"
+                  >
+                    <LogOut class="w-4 h-4" />
+                    Keluar Akun
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- GUEST STATE: MASUK BUTTON ONLY -->
+            <div v-else class="flex items-center">
+              <router-link
+                to="/login"
+                class="px-4 py-2 bg-[#2A1D15] hover:bg-[#AD9277] text-[#F6F4EE] text-xs font-semibold rounded-full transition-all shadow-2xs flex items-center gap-2 cursor-pointer"
+              >
+                <User class="w-4 h-4 text-[#AD9277]" />
+                <span>Masuk Akun</span>
+              </router-link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -144,7 +189,31 @@
         v-if="mobileMenuOpen"
         class="lg:hidden mt-4 p-5 bg-white border border-[#E6E0D4] rounded-2xl flex flex-col gap-3 font-sans text-sm uppercase tracking-widest animate-fade-in shadow-xl"
       >
-        <div class="px-1">
+        <!-- Mobile User State -->
+        <div v-if="authStore.currentUser" class="p-3 bg-[#F6F4EE] rounded-xl border border-[#E3D9CE] font-sans">
+          <div class="font-bold text-[#1A1A1A] text-sm flex items-center gap-2">
+            <UserCheck class="w-4 h-4 text-[#AD9277]" />
+            <span>{{ authStore.currentUser.fullName }}</span>
+          </div>
+          <div class="text-xs text-[#6B6B6B] lowercase normal-case mt-0.5">{{ authStore.currentUser.email }}</div>
+          <button
+            @click="handleLogout"
+            class="mt-2 text-xs text-rose-600 font-bold hover:underline cursor-pointer"
+          >
+            Keluar Akun
+          </button>
+        </div>
+        <div v-else class="font-sans">
+          <router-link
+            @click="mobileMenuOpen = false"
+            to="/login"
+            class="w-full block py-2.5 bg-[#2A1D15] text-[#F6F4EE] text-xs font-bold rounded-xl text-center cursor-pointer"
+          >
+            Masuk Akun
+          </router-link>
+        </div>
+
+        <div class="px-1 mt-1">
           <input
             type="text"
             v-model="productStore.searchQuery"
@@ -164,25 +233,14 @@
           class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A]"
           >Katalog Produk</router-link
         >
-        <router-link
-          @click="mobileMenuOpen = false"
-          to="/shop?category=leather"
-          class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A]"
-          >Leather Goods</router-link
-        >
-        <router-link
-          @click="mobileMenuOpen = false"
-          to="/shop?category=wear"
-          class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A]"
-          >Busana & Sepatu</router-link
-        >
+
         <a
-          href="https://shopee.co.id/avarastudio"
+          :href="contentStore.content.shopeeStoreUrl || 'https://shopee.co.id/avarastudio'"
           target="_blank"
           rel="noopener noreferrer"
-          class="py-2 border-b border-[#E6E0D4] text-[#EE4D2D] font-bold flex items-center gap-2"
+          class="py-2 border-b border-[#E6E0D4] text-[#1A1A1A] hover:text-[#AD9277] transition-colors flex items-center gap-2"
         >
-          <ShoppingBag class="w-4 h-4" />
+          <ShoppingBag class="w-4 h-4 text-[#AD9277]" />
           <span>Toko Official Shopee</span>
         </a>
         <router-link
@@ -206,9 +264,31 @@
 import { ref } from "vue";
 import { useWishlistStore } from "../../store/wishlistStore";
 import { useProductStore } from "../../store/productStore";
-import { Menu, Search, Heart, ShoppingBag, Sparkles } from "lucide-vue-next";
+import { useContentStore } from "../../store/contentStore";
+import { useAuthStore } from "../../store/authStore";
+import {
+  Menu,
+  Search,
+  Heart,
+  ShoppingBag,
+  User,
+  UserCheck,
+  ChevronDown,
+  LogOut,
+  ShieldCheck
+} from "lucide-vue-next";
 
 const mobileMenuOpen = ref(false);
+const userMenuOpen = ref(false);
+
 const wishlistStore = useWishlistStore();
 const productStore = useProductStore();
+const contentStore = useContentStore();
+const authStore = useAuthStore();
+
+function handleLogout() {
+  userMenuOpen.value = false;
+  mobileMenuOpen.value = false;
+  authStore.logoutUser();
+}
 </script>
